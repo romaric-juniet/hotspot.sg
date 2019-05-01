@@ -88,7 +88,7 @@
         // var heatmapLayer = new HeatmapOverlay(cfg);
         var geoLayer = L.geoJson();
 
-        var heatmapLayer = L.heatLayer([], { radius: 35 });
+        var heatmapLayer = L.heatLayer([], { radius: 30 });
 
         map = new L.Map("map", {
           center: new L.LatLng(1.356661, 103.830857),
@@ -105,7 +105,7 @@
         const api_key = "8d729311169437196b3204b8772c1589";
         const tags = "singapore";
         const extras = "date_taken,geo,url_sq,views";
-        const per_page = "5";
+        const per_page = "500";
         const flickrPhotos = await fetch(
           `https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=${api_key}&tags=${tags}&has_geo=true&extras=${extras}&per_page=${per_page}&page=${page}&format=json&nojsoncallback=1`
         ).then(data => data.json());
@@ -115,28 +115,27 @@
       async function run({ heatmapLayer, geoLayer, map }, cycles) {
         for (let cycle = 0; cycle < cycles; cycle++) {
           const photos = await loadPhotos(cycle);
-          console.log(photos)
-          var geojsonFeature = {
+          var geojsonFeatures = photos.map(photo => ({
             type: "Feature",
             properties: {
-              name: "Coors Field",
-              amenity: "Baseball Stadium",
+              name: photo.views,
+              id: photo.id,
               popupContent: "This is where the Rockies play!"
             },
             geometry: {
               type: "Point",
-              coordinates: [103.859199, 1.286247]
+              coordinates: [photo.longitude, photo.latitude]
             }
-          };
+          }));
 
-          geoLayer.addData(geojsonFeature);
+          geoLayer.addData(geojsonFeatures);
 
-          var locations = [geojsonFeature].forEach(feature =>
-            heatmapLayer.addLatLng([...feature.geometry.coordinates.reverse(), 0.5])
+          var locations = geojsonFeatures.forEach(feature =>
+            heatmapLayer.addLatLng([
+              ...feature.geometry.coordinates.reverse(),
+              0.5
+            ])
           );
-
-          
-
         }
       }
 

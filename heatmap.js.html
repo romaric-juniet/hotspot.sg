@@ -53,45 +53,49 @@
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.min.js"></script>
+    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
     <script>
       function setup() {
+        var map;
         var baseLayer = L.tileLayer(
           // https://wiki.openstreetmap.org/wiki/Tile_servers
-            "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
-            {
-              attribution:
-                'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
-              maxZoom: 18
-            }
-          );
+          "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
+          {
+            attribution:
+              'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+            maxZoom: 18
+          }
+        );
 
-          var cfg = {
-            // radius should be small ONLY if scaleRadius is true (or small radius is intended)
-            radius: 20,
-            maxOpacity: 0.8,
-            // scales the radius based on map zoom
-            scaleRadius: false,
-            // if set to false the heatmap uses the global maximum for colorization
-            // if activated: uses the data maximum within the current map boundaries
-            //   (there will always be a red spot with useLocalExtremas true)
-            useLocalExtrema: false,
-            // which field name in your data represents the latitude - default "lat"
-            latField: "latitude",
-            // which field name in your data represents the longitude - default "lng"
-            lngField: "longitude",
-            // which field name in your data represents the data value - default "value"
-            valueField: "views"
-          };
+        var cfg = {
+          // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+          radius: 20,
+          maxOpacity: 0.8,
+          // scales the radius based on map zoom
+          scaleRadius: false,
+          // if set to false the heatmap uses the global maximum for colorization
+          // if activated: uses the data maximum within the current map boundaries
+          //   (there will always be a red spot with useLocalExtremas true)
+          useLocalExtrema: false,
+          // which field name in your data represents the latitude - default "lat"
+          latField: "latitude",
+          // which field name in your data represents the longitude - default "lng"
+          lngField: "longitude",
+          // which field name in your data represents the data value - default "value"
+          valueField: "views"
+        };
 
-          var heatmapLayer = new HeatmapOverlay(cfg);
+        // var heatmapLayer = new HeatmapOverlay(cfg);
+        var heatmapLayer = null;
+        var geoLayer = L.geoJson();
 
-          var map = new L.Map("map", {
-            center: new L.LatLng(1.356661, 103.830857),
-            zoom: 12,
-            layers: [baseLayer, heatmapLayer]
-          });
+        map = new L.Map("map", {
+          center: new L.LatLng(1.356661, 103.830857),
+          zoom: 12,
+          layers: [baseLayer, geoLayer]
+        });
 
-          return heatmapLayer;
+        return { heatmapLayer, geoLayer, map };
       }
 
       // https://www.flickr.com/services/api/flickr.photos.search.htm
@@ -107,21 +111,44 @@
         return flickrPhotos.photos.photo;
       }
 
-      async function run(heatmapLayer, cycles) {
-        for (let cycle = 0; cycle < cycles ; cycle++) {
-          const photos = await loadPhotos(cycle);
-          heatmapLayer.addData(photos);
+      async function run({ heatmapLayer, geoLayer, map }, cycles) {
+        for (let cycle = 0; cycle < cycles; cycle++) {
+          // const photos = await loadPhotos(cycle);
+          var geojsonFeature = {
+            type: "Feature",
+            properties: {
+              name: "Coors Field",
+              amenity: "Baseball Stadium",
+              popupContent: "This is where the Rockies play!"
+            },
+            geometry: {
+              type: "Point",
+              coordinates: [103.859199, 1.286247]
+            }
+          };
+
+          geoLayer.addData(geojsonFeature);
+
+          var locations = [geojsonFeature].map(function(rat) {
+            // the heatmap plugin wants an array of each location
+            var location = rat.geometry.coordinates.reverse();
+            location.push(0.5);
+            return location; // e.g. [50.5, 30.5, 0.2], // lat, lng, intensity
+          });
+
+          var heat = L.heatLayer(locations, { radius: 35 });
+          map.addLayer(heat);
         }
       }
 
       window.onload = function() {
-        const heatmapLayer = setup();
-        run(heatmapLayer, 1);
+        const layers = setup();
+        run(layers, 1);
       };
     </script>
   </head>
   <body>
-    <h1>Leaflet Heatmap Layer Example</h1>
+    <h1>Leaflet</h1>
     <div id="map"></div>
   </body>
 </html>

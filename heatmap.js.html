@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Leaflet Heatmap Layer Plugin</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      body {
+        font-family: sans-serif;
+      }
+      body * {
+        font-weight: 200;
+      }
+      h1 {
+        position: absolute;
+        background: white;
+        padding: 10px;
+      }
+      #map {
+        height: 100%;
+      }
+      .leaflet-container {
+        background: rgba(0, 0, 0, 0.8) !important;
+      }
+      h1 {
+        position: absolute;
+        background: black;
+        color: white;
+        padding: 10px;
+        font-weight: 200;
+        z-index: 10000;
+      }
+      #all-examples-info {
+        position: absolute;
+        background: white;
+        font-size: 16px;
+        padding: 20px;
+        top: 100px;
+        width: 350px;
+        line-height: 150%;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"
+    />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.min.js"></script>
+    <script>
+      function setup() {
+        var baseLayer = L.tileLayer(
+          // https://wiki.openstreetmap.org/wiki/Tile_servers
+            "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
+            {
+              attribution:
+                'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+              maxZoom: 18
+            }
+          );
+
+          var cfg = {
+            // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+            radius: 20,
+            maxOpacity: 0.8,
+            // scales the radius based on map zoom
+            scaleRadius: false,
+            // if set to false the heatmap uses the global maximum for colorization
+            // if activated: uses the data maximum within the current map boundaries
+            //   (there will always be a red spot with useLocalExtremas true)
+            useLocalExtrema: false,
+            // which field name in your data represents the latitude - default "lat"
+            latField: "latitude",
+            // which field name in your data represents the longitude - default "lng"
+            lngField: "longitude",
+            // which field name in your data represents the data value - default "value"
+            valueField: "views"
+          };
+
+          var heatmapLayer = new HeatmapOverlay(cfg);
+
+          var map = new L.Map("map", {
+            center: new L.LatLng(1.356661, 103.830857),
+            zoom: 12,
+            layers: [baseLayer, heatmapLayer]
+          });
+
+          return heatmapLayer;
+      }
+
+      // https://www.flickr.com/services/api/flickr.photos.search.htm
+      // https://www.flickr.com/services/api/explore/flickr.photos.search
+      async function loadPhotos(page = 1) {
+        const api_key = "8d729311169437196b3204b8772c1589";
+        const tags = "singapore";
+        const extras = "date_taken,geo,url_sq,views";
+        const per_page = "500";
+        const flickrPhotos = await fetch(
+          `https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=${api_key}&tags=${tags}&has_geo=true&extras=${extras}&per_page=${per_page}&page=${page}&format=json&nojsoncallback=1`
+        ).then(data => data.json());
+        return flickrPhotos.photos.photo;
+      }
+
+      async function run(heatmapLayer, cycles) {
+        for (let cycle = 0; cycle < cycles ; cycle++) {
+          const photos = await loadPhotos(cycle);
+          heatmapLayer.addData(photos);
+        }
+      }
+
+      window.onload = function() {
+        const heatmapLayer = setup();
+        run(heatmapLayer, 1);
+      };
+    </script>
+  </head>
+  <body>
+    <h1>Leaflet Heatmap Layer Example</h1>
+    <div id="map"></div>
+  </body>
+</html>

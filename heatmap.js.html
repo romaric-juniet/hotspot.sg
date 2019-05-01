@@ -75,7 +75,20 @@
         };
 
         var geoLayer = L.geoJson([], {
-          pointToLayer: (feature, latlng) => L.circleMarker(latlng, geojsonMarkerOptions)
+          pointToLayer: (feature, latlng) =>
+            L.circleMarker(latlng, geojsonMarkerOptions),
+          onEachFeature: function(feature, layer) {
+            var popupText =
+              `<b>Id:</b> ${feature.properties.id}<br><b>Views:</b> ${feature.properties.views}<br><img src="${feature.properties.url_sq}">`;
+
+            layer.bindPopup(popupText, {
+              closeButton: true,
+              offset: L.point(0, -20)
+            });
+            layer.on("click", function() {
+              layer.openPopup();
+            });
+          }
         });
 
         var heatmapLayer = L.heatLayer([], { radius: 30 });
@@ -83,10 +96,10 @@
         map = new L.Map("map", {
           center: new L.LatLng(1.356661, 103.830857),
           zoom: 12,
-          layers: [baseLayer, geoLayer, heatmapLayer]
+          layers: [baseLayer, heatmapLayer, geoLayer]
         });
 
-        return { heatmapLayer, geoLayer, map };
+        return { heatmapLayer, geoLayer };
       }
 
       // https://www.flickr.com/services/api/flickr.photos.search.htm
@@ -102,15 +115,14 @@
         return flickrPhotos.photos.photo;
       }
 
-      async function run({ heatmapLayer, geoLayer, map }, cycles) {
+      async function run({ heatmapLayer, geoLayer }, cycles) {
         for (let cycle = 0; cycle < cycles; cycle++) {
           const photos = await loadPhotos(cycle);
           var geojsonFeatures = photos.map(photo => ({
             type: "Feature",
             properties: {
-              name: photo.views,
-              id: photo.id,
-              popupContent: "This is where the Rockies play!"
+              views: photo.views,
+              url_sq: photo.url_sq
             },
             geometry: {
               type: "Point",
@@ -131,7 +143,7 @@
 
       window.onload = function() {
         const layers = setup();
-        run(layers, 1);
+        run(layers, 10);
       };
     </script>
   </head>

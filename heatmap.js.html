@@ -86,13 +86,14 @@
         };
 
         // var heatmapLayer = new HeatmapOverlay(cfg);
-        var heatmapLayer = null;
         var geoLayer = L.geoJson();
+
+        var heatmapLayer = L.heatLayer([], { radius: 35 });
 
         map = new L.Map("map", {
           center: new L.LatLng(1.356661, 103.830857),
           zoom: 12,
-          layers: [baseLayer, geoLayer]
+          layers: [baseLayer, geoLayer, heatmapLayer]
         });
 
         return { heatmapLayer, geoLayer, map };
@@ -104,7 +105,7 @@
         const api_key = "8d729311169437196b3204b8772c1589";
         const tags = "singapore";
         const extras = "date_taken,geo,url_sq,views";
-        const per_page = "500";
+        const per_page = "5";
         const flickrPhotos = await fetch(
           `https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=${api_key}&tags=${tags}&has_geo=true&extras=${extras}&per_page=${per_page}&page=${page}&format=json&nojsoncallback=1`
         ).then(data => data.json());
@@ -113,7 +114,8 @@
 
       async function run({ heatmapLayer, geoLayer, map }, cycles) {
         for (let cycle = 0; cycle < cycles; cycle++) {
-          // const photos = await loadPhotos(cycle);
+          const photos = await loadPhotos(cycle);
+          console.log(photos)
           var geojsonFeature = {
             type: "Feature",
             properties: {
@@ -129,15 +131,12 @@
 
           geoLayer.addData(geojsonFeature);
 
-          var locations = [geojsonFeature].map(function(rat) {
-            // the heatmap plugin wants an array of each location
-            var location = rat.geometry.coordinates.reverse();
-            location.push(0.5);
-            return location; // e.g. [50.5, 30.5, 0.2], // lat, lng, intensity
-          });
+          var locations = [geojsonFeature].forEach(feature =>
+            heatmapLayer.addLatLng([...feature.geometry.coordinates.reverse(), 0.5])
+          );
 
-          var heat = L.heatLayer(locations, { radius: 35 });
-          map.addLayer(heat);
+          
+
         }
       }
 

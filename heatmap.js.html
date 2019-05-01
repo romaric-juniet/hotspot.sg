@@ -51,8 +51,6 @@
       href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"
     />
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/heatmapjs@2.0.2/heatmap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/leaflet-heatmap@1.0.0/leaflet-heatmap.min.js"></script>
     <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
     <script>
       function setup() {
@@ -67,26 +65,18 @@
           }
         );
 
-        var cfg = {
-          // radius should be small ONLY if scaleRadius is true (or small radius is intended)
-          radius: 20,
-          maxOpacity: 0.8,
-          // scales the radius based on map zoom
-          scaleRadius: false,
-          // if set to false the heatmap uses the global maximum for colorization
-          // if activated: uses the data maximum within the current map boundaries
-          //   (there will always be a red spot with useLocalExtremas true)
-          useLocalExtrema: false,
-          // which field name in your data represents the latitude - default "lat"
-          latField: "latitude",
-          // which field name in your data represents the longitude - default "lng"
-          lngField: "longitude",
-          // which field name in your data represents the data value - default "value"
-          valueField: "views"
+        var geojsonMarkerOptions = {
+          radius: 2,
+          fillColor: "#fff",
+          // color: "#000",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.8
         };
 
-        // var heatmapLayer = new HeatmapOverlay(cfg);
-        var geoLayer = L.geoJson();
+        var geoLayer = L.geoJson([], {
+          pointToLayer: (feature, latlng) => L.circleMarker(latlng, geojsonMarkerOptions)
+        });
 
         var heatmapLayer = L.heatLayer([], { radius: 30 });
 

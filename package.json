@@ -1,0 +1,22 @@
+{
+  "name": "hotspot.sg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "loader.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/romaric-juniet/hotspot.sg.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/romaric-juniet/hotspot.sg/issues"
+  },
+  "homepage": "https://github.com/romaric-juniet/hotspot.sg#readme",
+  "dependencies": {
+    "node-fetch": "^2.5.0"
+  }
+}

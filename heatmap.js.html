@@ -65,8 +65,11 @@
           pointToLayer: (feature, latlng) =>
             L.circleMarker(latlng, geojsonMarkerOptions),
           onEachFeature: function(feature, layer) {
-            var popupText =
-              `<b>Id:</b> ${feature.properties.id}<br><b>Views:</b> ${feature.properties.views}<br><img src="${feature.properties.url_s}">`;
+            var popupText = `<b>Id:</b> ${
+              feature.properties.id
+            }<br><b>Views:</b> ${feature.properties.views}<br><img src="${
+              feature.properties.url_s
+            }">`;
 
             layer.bindPopup(popupText, {
               closeButton: true,
@@ -89,53 +92,21 @@
         return { heatmapLayer, geoLayer };
       }
 
-      // https://www.flickr.com/services/api/flickr.photos.search.htm
-      // https://www.flickr.com/services/api/explore/flickr.photos.search
-      async function loadPhotos(page = 1) {
-        const params = Object.entries({
-          api_key: '407902b4e99781ae7d33552db35a119c',
-          bbox: '103.63123,1.180947,104.040871,1.458106',
-          extras: 'date_taken,geo,url_s,views',
-          min_taken_date: new Date(2018, 0, 1).getTime() / 1000,
-          max_taken_date: new Date(2019, 0, 1).getTime() / 1000,
-          per_page: '500',
-          sort: 'interestingness-desc'
-        }).map(([key, value]) => `${key}=${value}`).join('&');
-        const flickrPhotos = await fetch(
-          `https://api.flickr.com/services/rest/?method=flickr.photos.search&${params}&format=json&nojsoncallback=1`
-        ).then(data => data.json());
-        return flickrPhotos.photos.photo;
-      }
+      async function run({ heatmapLayer, geoLayer }) {
+        const geojsonFeatures  = (await (await fetch('2018.geojson')).json()).features
+        geoLayer.addData(geojsonFeatures);
 
-      async function run({ heatmapLayer, geoLayer }, cycles) {
-        for (let cycle = 0; cycle < cycles; cycle++) {
-          const photos = await loadPhotos(cycle);
-          var geojsonFeatures = photos.map(photo => ({
-            type: "Feature",
-            properties: {
-              views: photo.views,
-              url_s: photo.url_s
-            },
-            geometry: {
-              type: "Point",
-              coordinates: [photo.longitude, photo.latitude]
-            }
-          }));
-
-          geoLayer.addData(geojsonFeatures);
-
-          var locations = geojsonFeatures.forEach(feature =>
-            heatmapLayer.addLatLng([
-              ...feature.geometry.coordinates.reverse(),
-              0.5
-            ])
-          );
-        }
+        var locations = geojsonFeatures.forEach(feature =>
+          heatmapLayer.addLatLng([
+            ...feature.geometry.coordinates.reverse(),
+            0.1
+          ])
+        );
       }
 
       window.onload = function() {
         const layers = setup();
-        run(layers, 10);
+        run(layers);
       };
     </script>
   </head>
@@ -144,3 +115,4 @@
     <div id="map"></div>
   </body>
 </html>
+

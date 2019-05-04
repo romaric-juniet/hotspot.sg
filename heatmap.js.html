@@ -40,6 +40,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
+      let heatmapLayer = null;
+      let geoLayer = null;
+
       function setup() {
         var map;
         var baseLayer = L.tileLayer(
@@ -53,12 +56,12 @@
         );
 
         var geojsonMarkerOptions = {
-          radius: 2,
+          radius: 3,
           fillColor: "#fff",
           // color: "#000",
           weight: 1,
           opacity: 1,
-          fillOpacity: 0.8
+          fillOpacity: 0.5,
         };
 
         var geoLayer = L.geoJson([], {
@@ -92,8 +95,8 @@
         return { heatmapLayer, geoLayer };
       }
 
-      async function run({ heatmapLayer, geoLayer }) {
-        const geojsonFeatures  = (await (await fetch('2018.geojson')).json()).features
+      async function run(year) {
+        const geojsonFeatures  = (await (await fetch('data/'+year+'.geojson')).json()).features
         geoLayer.addData(geojsonFeatures);
 
         var locations = geojsonFeatures.forEach(feature =>
@@ -106,7 +109,9 @@
 
       window.onload = function() {
         const layers = setup();
-        run(layers);
+        heatmapLayer = layers.heatmapLayer;
+        geoLayer = layers.geoLayer;
+        run(2018);
       };
     </script>
   </head>

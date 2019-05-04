@@ -40,20 +40,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
-      let heatmapLayer = null;
-      let geoLayer = null;
+      let map = null;
+      var baseLayer = null;
 
       function setup() {
-        var map;
-        var baseLayer = L.tileLayer(
-          // https://wiki.openstreetmap.org/wiki/Tile_servers
-          "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
-          {
-            attribution:
-              'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
-            maxZoom: 18
+        map.eachLayer(function(layer) {
+          if (layer !== baseLayer) {
+            map.removeLayer(layer);
           }
-        );
+        });
 
         var geojsonMarkerOptions = {
           radius: 3,
@@ -61,7 +56,7 @@
           // color: "#000",
           weight: 1,
           opacity: 1,
-          fillOpacity: 0.5,
+          fillOpacity: 0.5
         };
 
         var geoLayer = L.geoJson([], {
@@ -86,17 +81,17 @@
 
         var heatmapLayer = L.heatLayer([], { radius: 30 });
 
-        map = new L.Map("map", {
-          center: new L.LatLng(1.356661, 103.830857),
-          zoom: 12,
-          layers: [baseLayer, heatmapLayer, geoLayer]
-        });
+        geoLayer.addTo(map);
+        heatmapLayer.addTo(map);
 
         return { heatmapLayer, geoLayer };
       }
 
       async function run(year) {
-        const geojsonFeatures  = (await (await fetch('data/'+year+'.geojson')).json()).features
+        const { heatmapLayer, geoLayer } = setup();
+        const geojsonFeatures = (await (await fetch(
+          "data/" + year + ".geojson"
+        )).json()).features;
         geoLayer.addData(geojsonFeatures);
 
         var locations = geojsonFeatures.forEach(feature =>
@@ -108,16 +103,34 @@
       }
 
       window.onload = function() {
-        const layers = setup();
-        heatmapLayer = layers.heatmapLayer;
-        geoLayer = layers.geoLayer;
+        baseLayer = L.tileLayer(
+          // https://wiki.openstreetmap.org/wiki/Tile_servers
+          "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
+          {
+            attribution:
+              'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+            maxZoom: 18
+          }
+        );
+
+        map = new L.Map("map", {
+          center: new L.LatLng(1.356661, 103.830857),
+          zoom: 12,
+          layers: [baseLayer]
+        });
+
         run(2018);
       };
     </script>
   </head>
   <body>
-    <h1>Leaflet</h1>
+    <h1>
+      Leaflet
+      <button onclick="run(2000)">2000</button>
+      <button onclick="run(2010)">2010</button>
+      <button onclick="run(2015)">2015</button>
+      <button onclick="run(2018)">2018</button>
+    </h1>
     <div id="map"></div>
   </body>
 </html>
-

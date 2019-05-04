@@ -10,22 +10,18 @@
         padding: 0;
         height: 100%;
       }
-      body {
-        font-family: sans-serif;
-      }
       body * {
+        font-family: sans-serif;
         font-weight: 200;
-      }
-      h1 {
-        position: absolute;
-        background: white;
-        padding: 10px;
       }
       #map {
         height: 100%;
       }
       .leaflet-container {
         background: rgba(0, 0, 0, 0.8) !important;
+      }
+      .leaflet-popup-content {
+        width: auto !important;
       }
       h1 {
         position: absolute;
@@ -34,24 +30,15 @@
         padding: 10px;
         font-weight: 200;
         z-index: 10000;
-      }
-      #all-examples-info {
-        position: absolute;
-        background: white;
-        font-size: 16px;
-        padding: 20px;
-        top: 100px;
-        width: 350px;
-        line-height: 150%;
-        border: 1px solid rgba(0, 0, 0, 0.2);
+        margin-top: 70px;
       }
     </style>
     <link
       rel="stylesheet"
-      href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.css"
     />
-    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
-    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
       function setup() {
         var map;
@@ -79,7 +66,7 @@
             L.circleMarker(latlng, geojsonMarkerOptions),
           onEachFeature: function(feature, layer) {
             var popupText =
-              `<b>Id:</b> ${feature.properties.id}<br><b>Views:</b> ${feature.properties.views}<br><img src="${feature.properties.url_sq}">`;
+              `<b>Id:</b> ${feature.properties.id}<br><b>Views:</b> ${feature.properties.views}<br><img src="${feature.properties.url_s}">`;
 
             layer.bindPopup(popupText, {
               closeButton: true,
@@ -105,12 +92,17 @@
       // https://www.flickr.com/services/api/flickr.photos.search.htm
       // https://www.flickr.com/services/api/explore/flickr.photos.search
       async function loadPhotos(page = 1) {
-        const api_key = "8d729311169437196b3204b8772c1589";
-        const tags = "singapore";
-        const extras = "date_taken,geo,url_sq,views";
-        const per_page = "500";
+        const params = Object.entries({
+          api_key: '407902b4e99781ae7d33552db35a119c',
+          bbox: '103.63123,1.180947,104.040871,1.458106',
+          extras: 'date_taken,geo,url_s,views',
+          min_taken_date: new Date(2018, 0, 1).getTime() / 1000,
+          max_taken_date: new Date(2019, 0, 1).getTime() / 1000,
+          per_page: '500',
+          sort: 'interestingness-desc'
+        }).map(([key, value]) => `${key}=${value}`).join('&');
         const flickrPhotos = await fetch(
-          `https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=${api_key}&tags=${tags}&has_geo=true&extras=${extras}&per_page=${per_page}&page=${page}&format=json&nojsoncallback=1`
+          `https://api.flickr.com/services/rest/?method=flickr.photos.search&${params}&format=json&nojsoncallback=1`
         ).then(data => data.json());
         return flickrPhotos.photos.photo;
       }
@@ -122,7 +114,7 @@
             type: "Feature",
             properties: {
               views: photo.views,
-              url_sq: photo.url_sq
+              url_s: photo.url_s
             },
             geometry: {
               type: "Point",

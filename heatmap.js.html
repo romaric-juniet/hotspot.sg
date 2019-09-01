@@ -40,8 +40,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
+      // TODO:
+      // - Initialize when loading the website
+      // - checkbox to cumulate layers
+
       let map = null;
       var baseLayer = null;
+      const values = {
+        1950: { geoLayer: null, heatmapLayer: null},
+        1960: { geoLayer: null, heatmapLayer: null},
+        1970: { geoLayer: null, heatmapLayer: null},
+        1980: { geoLayer: null, heatmapLayer: null},
+        1990: { geoLayer: null, heatmapLayer: null},
+        2000: { geoLayer: null, heatmapLayer: null},
+        2001: { geoLayer: null, heatmapLayer: null},
+        2002: { geoLayer: null, heatmapLayer: null},
+        2003: { geoLayer: null, heatmapLayer: null},
+        2004: { geoLayer: null, heatmapLayer: null},
+        2005: { geoLayer: null, heatmapLayer: null},
+        2006: { geoLayer: null, heatmapLayer: null},
+        2007: { geoLayer: null, heatmapLayer: null},
+        2008: { geoLayer: null, heatmapLayer: null},
+        2009: { geoLayer: null, heatmapLayer: null},
+        2010: { geoLayer: null, heatmapLayer: null},
+        2011: { geoLayer: null, heatmapLayer: null},
+        2012: { geoLayer: null, heatmapLayer: null},
+        2013: { geoLayer: null, heatmapLayer: null},
+        2014: { geoLayer: null, heatmapLayer: null},
+        2015: { geoLayer: null, heatmapLayer: null},
+        2016: { geoLayer: null, heatmapLayer: null},
+        2017: { geoLayer: null, heatmapLayer: null},
+        2018: { geoLayer: null, heatmapLayer: null},
+        2019: { geoLayer: null, heatmapLayer: null},
+      };
 
       function setup() {
         map.eachLayer(function(layer) {
@@ -59,47 +90,52 @@
           fillOpacity: 0.5
         };
 
-        var geoLayer = L.geoJson([], {
-          pointToLayer: (feature, latlng) =>
-            L.circleMarker(latlng, geojsonMarkerOptions),
-          onEachFeature: function(feature, layer) {
-            var popupText = `<b>Id:</b> ${
-              feature.properties.id
-            }<br><b>Views:</b> ${feature.properties.views}<br><img src="${
-              feature.properties.url_s
-            }">`;
+        const onEachFeature = function(feature, layer) {
+          var popupText = `<b>Id:</b> ${
+            feature.properties.id
+          }<br><b>Views:</b> ${feature.properties.views}<br><img src="${
+            feature.properties.url_s
+          }">`;
 
-            layer.bindPopup(popupText, {
-              closeButton: true,
-              offset: L.point(0, -20)
-            });
-            layer.on("click", function() {
-              layer.openPopup();
-            });
+          layer.bindPopup(popupText, {
+            closeButton: true,
+            offset: L.point(0, -20)
+          });
+          layer.on("click", function() {
+            layer.openPopup();
+          });
+        }
+
+        Object.keys(values).forEach(async key => {
+          const geojsonFeatures = (
+            await (await fetch("data/" + key + ".geojson")).json()
+          ).features;
+
+          values[key].geoLayer = L.geoJson([], {
+            pointToLayer: (feature, latlng) => L.circleMarker(latlng, geojsonMarkerOptions),
+            onEachFeature
+          });
+          values[key].geoLayer.addData(geojsonFeatures);
+
+          values[key].heatmapLayer = L.heatLayer([], { radius: 30 });
+          geojsonFeatures.forEach(feature =>
+            values[key].heatmapLayer.addLatLng([
+              ...feature.geometry.coordinates.reverse(),
+              0.1
+            ])
+          );
+        });
+      }
+
+      function run (year) {
+        map.eachLayer(function(layer) {
+          if (layer !== baseLayer) {
+            map.removeLayer(layer);
           }
         });
 
-        var heatmapLayer = L.heatLayer([], { radius: 30 });
-
-        geoLayer.addTo(map);
-        heatmapLayer.addTo(map);
-
-        return { heatmapLayer, geoLayer };
-      }
-
-      async function run(year) {
-        const { heatmapLayer, geoLayer } = setup();
-        const geojsonFeatures = (await (await fetch(
-          "data/" + year + ".geojson"
-        )).json()).features;
-        geoLayer.addData(geojsonFeatures);
-
-        var locations = geojsonFeatures.forEach(feature =>
-          heatmapLayer.addLatLng([
-            ...feature.geometry.coordinates.reverse(),
-            0.1
-          ])
-        );
+        values[year].geoLayer.addTo(map);
+        values[year].heatmapLayer.addTo(map);
       }
 
       window.onload = function() {
@@ -119,7 +155,7 @@
           layers: [baseLayer]
         });
 
-        onRangeChange();
+        setup();
       };
 
       function onRangeChange() {

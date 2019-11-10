@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Leaflet Heatmap Layer Plugin</title>
+    <title>Photo hotspots in Singapore</title>
     <style>
       body,
       html {
@@ -40,10 +40,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.4.0/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script>
-      // TODO:
-      // - Initialize when loading the website
-      // - checkbox to cumulate layers
-
       let map = null;
       var baseLayer = null;
       const values = {
@@ -137,7 +133,7 @@
           "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
           {
             attribution:
-              'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+              'Author: <a href="https://romaric.xyz">Romaric Juniet</a>, Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
             maxZoom: 18
           }
         );

@@ -85,9 +85,7 @@
         };
 
         const onEachFeature = function(feature, layer) {
-          var popupText = `<b>Id:</b> ${
-            feature.properties.id
-          }<br><b>Views:</b> ${feature.properties.views}<br><img src="${
+          var popupText = `<b>Views:</b> ${feature.properties.views}<br><img src="${
             feature.properties.url_s
           }">`;
 

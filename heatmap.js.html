@@ -74,13 +74,7 @@
         2019: { geoLayer: null, heatmapLayer: null},
       };
 
-      function setup() {
-        map.eachLayer(function(layer) {
-          if (layer !== baseLayer) {
-            map.removeLayer(layer);
-          }
-        });
-
+      async function setup() {
         var geojsonMarkerOptions = {
           radius: 3,
           fillColor: "#fff",
@@ -106,7 +100,7 @@
           });
         }
 
-        Object.keys(values).forEach(async key => {
+        await Promise.all(Object.keys(values).map(async key => {
           const geojsonFeatures = (
             await (await fetch("data/" + key + ".geojson")).json()
           ).features;
@@ -124,9 +118,10 @@
               0.1
             ])
           );
-        });
+        }));
       }
 
+      // hide all layers except the ones for this year
       function run (year) {
         map.eachLayer(function(layer) {
           if (layer !== baseLayer) {
@@ -138,7 +133,7 @@
         values[year].heatmapLayer.addTo(map);
       }
 
-      window.onload = function() {
+      window.onload = async function() {
         baseLayer = L.tileLayer(
           // https://wiki.openstreetmap.org/wiki/Tile_servers
           "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png	",
@@ -155,7 +150,10 @@
           layers: [baseLayer]
         });
 
-        setup();
+        await setup();
+
+        document.getElementById("range").value = 2019;
+        onRangeChange();
       };
 
       function onRangeChange() {
@@ -183,10 +181,6 @@
         oninput="onRangeChange()"
         value="2019">
       <div id="selectedRange"></div>
-      <button onclick="run(2000)">2000</button>
-      <button onclick="run(2010)">2010</button>
-      <button onclick="run(2015)">2015</button>
-      <button onclick="run(2018)">2018</button>
     </h1>
     <div id="map"></div>
   </body>
